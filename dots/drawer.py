@@ -53,3 +53,5 @@ class Drawer:
                            ((player.current_dot.x + 1) * self.step,
                             (player.current_dot.y + 1) * self.step), 10, 2)
 
+    def draw_cycle(self):
+        pass

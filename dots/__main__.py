@@ -1,4 +1,5 @@
 from dots.game import Game
+from config import win_size
 
-g = Game((10, 10))
+g = Game(win_size)
 g.start()
