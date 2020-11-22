@@ -7,4 +7,4 @@ class Dot:
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
-        return self.x*1000+self.y
+        return self.x * 1000 + self.y

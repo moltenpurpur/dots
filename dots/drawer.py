@@ -3,6 +3,7 @@ from dots.color import Color
 
 import pygame
 
+from dots.dot import Dot
 from dots.map import Map
 from dots.player import Player
 
@@ -19,9 +20,9 @@ class Drawer:
     def draw_scene(self, game_map, player):
         self.win.fill((255, 255, 255))
         self.draw_lines()
-        self.draw_dots(game_map)
+        self.draw_dots(game_map.dots)
         # self.draw_score(game_map)
-        # self.draw_cycle(game_map)
+        self.draw_cycle(game_map.dict_cycle_way)
         self.draw_cursor(player)
 
         pygame.display.update()
@@ -53,5 +54,12 @@ class Drawer:
                            ((player.current_dot.x + 1) * self.step,
                             (player.current_dot.y + 1) * self.step), 10, 2)
 
-    def draw_cycle(self):
-        pass
+    def draw_cycle(self, dict_cycle_way: Dict[Color, List[List[Dot]]]):
+        for color in dict_cycle_way:
+            for cycle in dict_cycle_way[color]:
+                for i in range(1, len(cycle)):
+                    pygame.draw.line(self.win, (255, 0, 0),
+                                     ((cycle[i - 1].x + 1) * self.step,
+                                      (cycle[i - 1].y + 1) * self.step),
+                                     ((cycle[i].x + 1) * self.step,
+                                      (cycle[i].y + 1) * self.step), 3)

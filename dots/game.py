@@ -19,7 +19,7 @@ class Game:
         while True:
             pygame.time.delay(100)
             self.check_events()
-            self.drawer.draw_scene(self.game_map.dots, self.player)
+            self.drawer.draw_scene(self.game_map, self.player)
 
     def check_events(self):
         for event in pygame.event.get():

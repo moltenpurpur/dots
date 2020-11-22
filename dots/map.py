@@ -45,9 +45,9 @@ class Map:
 
     def find_cycles_bfs(self, target_dot: Dot, color: Color):
         dict_way: Dict[Dot, Dot] = {}
-        visited, queue = set(), [target_dot]
+        visited, queue = set(), [Dot(target_dot.x, target_dot.y)]
         visited.add(target_dot)
-        previous_dot = target_dot
+        previous_dot = Dot(target_dot.x, target_dot.y)
         while queue:
             current_dot = queue.pop()
             dict_way[current_dot] = previous_dot
@@ -87,8 +87,8 @@ class Map:
                 if previous_dot in dict_way:
                     previous_dot = dict_way[previous_dot]
                     cycle_way.append(previous_dot)
-            return cycle_way
 
-        # for dot in cycle_way:
-        #     print(str(dot.x) + ' ' + str(dot.y))
-        # print("\n\n")
+            # for dot in cycle_way:
+            #     print(str(dot.x) + ' ' + str(dot.y))
+            # print("\n\n")
+            return cycle_way
