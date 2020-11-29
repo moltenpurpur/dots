@@ -8,3 +8,9 @@ class Dot:
 
     def __hash__(self):
         return self.x * 1000 + self.y
+
+    def __str__(self):
+        return f'X={self.x} Y={self.y}'
+
+    def __repr__(self):
+        return str(self)

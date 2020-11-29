@@ -17,12 +17,12 @@ class Drawer:
              (self.window_size[1] + 1) * self.step + 50))
         pygame.init()
 
-    def draw_scene(self, game_map, player):
+    def draw_scene(self, game_map: Map, player: Player):
         self.win.fill((255, 255, 255))
         self.draw_lines()
         self.draw_dots(game_map.dots)
         # self.draw_score(game_map)
-        self.draw_cycle(game_map.dict_cycle_way)
+        self.draw_cycle(game_map.cycle_way)
         self.draw_cursor(player)
 
         pygame.display.update()
@@ -46,6 +46,10 @@ class Drawer:
                                         (y + 1) * self.step), 5, 3)
                 if game_map[x][y] == Color.BLUE:
                     pygame.draw.circle(self.win, (0, 0, 255),
+                                       ((x + 1) * self.step,
+                                        (y + 1) * self.step), 5, 3)
+                if game_map[x][y] == Color.BLOCKED:
+                    pygame.draw.circle(self.win, (0, 255, 0),
                                        ((x + 1) * self.step,
                                         (y + 1) * self.step), 5, 3)
 
