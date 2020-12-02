@@ -6,3 +6,5 @@ class Color(Enum):
     BLOCKED = 1
     RED = 2
     BLUE = 3
+    BLOCKED_RED = 4
+    BLOCKED_BLUE = 5

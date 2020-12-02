@@ -40,16 +40,12 @@ class Drawer:
     def draw_dots(self, game_map: List[List[Color]]):
         for x in range(len(game_map)):
             for y in range(len(game_map[x])):
-                if game_map[x][y] == Color.RED:
+                if game_map[x][y] in [Color.RED, Color.BLOCKED_RED]:
                     pygame.draw.circle(self.win, (255, 0, 0),
                                        ((x + 1) * self.step,
                                         (y + 1) * self.step), 5, 3)
-                if game_map[x][y] == Color.BLUE:
+                if game_map[x][y] in [Color.BLUE, Color.BLOCKED_BLUE]:
                     pygame.draw.circle(self.win, (0, 0, 255),
-                                       ((x + 1) * self.step,
-                                        (y + 1) * self.step), 5, 3)
-                if game_map[x][y] == Color.BLOCKED:
-                    pygame.draw.circle(self.win, (0, 255, 0),
                                        ((x + 1) * self.step,
                                         (y + 1) * self.step), 5, 3)
 
