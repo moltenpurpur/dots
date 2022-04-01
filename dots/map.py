@@ -15,7 +15,10 @@ class Map:
         self.fill_map()
         self.cycle_way: Dict[Color, List[List[Dot]]] = \
             collections.defaultdict(list)
+        self.blue_blocked: List[Set[Dot]] = []
+        self.red_blocked: List[Set[Dot]] = []
         self.score: Dict[Color, int] = collections.defaultdict(int)
+        self.blocked: Set[Dot] = set()
 
     def __getitem__(self, item: Dot):
         return self.dots[item.x][item.y]
@@ -23,18 +26,16 @@ class Map:
     def __setitem__(self, key, value):
         if self.dots[key.x][key.y] == Color.EMPTY:
             self.dots[key.x][key.y] = value
-        if value == Color.BLOCKED:
-            if self[key] == Color.BLUE:
-                self.dots[key.x][key.y] = Color.BLOCKED_BLUE
-            if self[key] == Color.RED:
-                self.dots[key.x][key.y] = Color.BLOCKED_RED
 
     def fill_map(self):
+        m = []
         for x in range(self.size[0]):
             dots_line = []
             for y in range(self.size[1]):
                 dots_line.append(Color.EMPTY)
+                m.append(Dot(x, y))
             self.dots.append(dots_line)
+        self.companents = [(Color.EMPTY, m)]
 
     def can_set_dot(self, dot: Dot):
         return 0 <= dot.x < len(self.dots) \
@@ -48,84 +49,110 @@ class Map:
             self.set_turn += 1
             if self.set_turn >= len(self.players):
                 self.set_turn = 0
-            self.find_cycles(target_dot, color)
+            self.find_cycles()
+            self.fill_blocked()
+            self.update_score()
 
-    def find_cycles(self, target_dot: Dot, color: Color):
-        # target_dot = Dot(target_dot.x, target_dot.y)
-        ways: List[Dict[Dot, Dot]] = []
-        self.find_all_cycles(target_dot,
-                             target_dot,
-                             color,
-                             set(),
-                             {},
-                             ways)
-        min_dict_cycle: List[List[Dot]] = \
-            self.find_min_dict_cycle(ways, self.get_opponent_color(color))
-        if min_dict_cycle is None:
-            return
+    def find_cycles(self):
+        dot_colors = collections.defaultdict(set)
+        for x in range(self.size[0]):
+            for y in range(self.size[1]):
+                dot = Dot(x, y)
+                if dot in self.blocked:
+                    continue
+                dot_colors[self[dot]].add(dot)
 
-        self.cycle_way[color].append(min_dict_cycle[0])
-        for dot in min_dict_cycle[1]:
-            self[dot] = color.BLOCKED
-        self.score = collections.defaultdict(int)
-        for i in self.dots:
-            for j in i:
-                if color == Color.RED and j == Color.BLOCKED_BLUE:
-                    self.score[color] += 1
-                if color == Color.BLUE and j == Color.BLOCKED_RED:
-                    self.score[color] += 1
-        print(self.score)
+        for i in self.get_blocked(Color.BLUE, dot_colors[Color.BLUE]):
+            self.blue_blocked.append(i)
+        for i in self.get_blocked(Color.RED, dot_colors[Color.RED]):
+            self.red_blocked.append(i)
+        # for i in self.get_blocked(Color.EMPTY, dot_colors[Color.EMPTY]):
+        #     for j in i:
+        #         self[j] = Color.BLOCKED
 
-    def find_all_cycles(self, current_dot: Dot, target_dot: Dot, color: Color,
-                        visited: Set[Dot], way: Dict[Dot, Dot],
-                        ways: List[Dict[Dot, Dot]]):
-        if target_dot == current_dot and len(way.keys()) != 0:
-            ways.append(way)
-            return
-        visited.add(current_dot)
+        blue_cycles: List[List[Dot]] = []
+        red_cycles: List[List[Dot]] = []
+        for blue_b in self.blue_blocked:
+            blue_cycles.append(self.get_cycle(Color.RED, blue_b))
 
-        for neighbor in self.get_neighbor(current_dot, color):
-            if neighbor not in visited \
-                    or (neighbor == target_dot
-                        and len(visited) > 3):
-                way[neighbor] = current_dot
-                self.find_all_cycles(neighbor,
-                                     target_dot,
-                                     color,
-                                     visited,
-                                     copy.deepcopy(way),
-                                     ways)
-        visited.remove(current_dot)
+        for red_b in self.red_blocked:
+            red_cycles.append(self.get_cycle(Color.BLUE, red_b))
 
-    def find_min_dict_cycle(self, ways: List[Dict[Dot, Dot]], color: Color):
-        if len(ways) > 0:
-            inside_dots: List[Dot] = []
-            min_way: List[Dot] = self.transform_dict_way_in_list_way(ways[0])
-            for way in ways:
-                if len(way) <= len(min_way):
-                    way_dots_list = self.transform_dict_way_in_list_way(way)
-                    inside_dots = self.find_inside_cycles_dots(way_dots_list,
-                                                               color)
-                    if len(inside_dots) > 0:
-                        min_way = way_dots_list
+        self.cycle_way[Color.RED] = blue_cycles
+        self.cycle_way[Color.BLUE] = red_cycles
 
-            if len(inside_dots) > 0:
-                return [min_way, inside_dots]
+    def get_cycle(self, opposite_color: Color, blocked_dots: Set[Dot]):
+        border_dots: Set[Dot] = set()
+        visited: Set[Dot] = set()
+        border_cycle: List[Dot] = []
+        for dot in blocked_dots:
+            if dot in visited:
+                continue
+            visited.add(dot)
+            for neighbor in self.get_four_neighbors(dot):
+                if self[neighbor] != opposite_color \
+                        or neighbor in blocked_dots:
+                    continue
+                if self[neighbor] == opposite_color:
+                    border_dots.add(neighbor)
+        border_dot = border_dots.pop()
+        border_cycle.append(border_dot)
 
-        return None
+        while len(border_dots) != 0:
+            for dot in self.get_all_neighbor(border_dot):
+                if dot in border_dots:
+                    border_dot = dot
+                    border_dots.remove(border_dot)
+                    border_cycle.append(border_dot)
+                    break
+        border_cycle.append(border_cycle[0])
+        return border_cycle
 
-    @staticmethod
-    def transform_dict_way_in_list_way(dict_way: Dict[Dot, Dot]):
-        list_way: List[Dot] = []
-        for i in dict_way.keys():
-            list_way.append(i)
-            break
+    def get_blocked(self, color: Color, dots: Set[Dot]):
+        blocked: List[Set[Dot]] = []
+        visited = set()
+        while len(dots) > 0:
+            dot = dots.pop()
+            if dot in visited:
+                continue
+            deque = collections.deque()
+            deque.append(dot)
+            current_blocked = set()
+            bordered = False
+            while len(deque) > 0:
+                current_dot = deque.pop()
+                visited.add(current_dot)
+                if current_dot not in self.blocked:
+                    current_blocked.add(current_dot)
+                if self.is_dot_on_border(current_dot):
+                    bordered = True
+                for neighbor in self.get_four_neighbors(current_dot):
+                    if (self[neighbor] == Color.EMPTY
+                        or self[neighbor] == color
+                        or neighbor in self.blocked) \
+                            and neighbor not in visited:
+                        deque.append(neighbor)
+            if not bordered:
+                blocked.append(current_blocked)
+        return blocked
 
-        while len(list_way) <= len(dict_way.keys()):
-            list_way.append(dict_way[list_way[len(list_way) - 1]])
-        return list_way
+    def is_dot_on_border(self, dot: Dot):
+        return dot.x == 0 or dot.x == self.size[
+            0] - 1 or dot.y == 0 or dot.y == self.size[1] - 1
 
-    def get_neighbor(self, dot: Dot, color: Color):
+    def get_four_neighbors(self, dot: Dot):
+        neighbors: List[Dot] = []
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if abs(dx) == abs(dy):
+                    continue
+                current_dot = Dot(dot.x + dx, dot.y + dy)
+                if 0 <= current_dot.x < self.size[0] \
+                        and 0 <= current_dot.y < self.size[1]:
+                    neighbors.append(current_dot)
+        return neighbors
+
+    def get_all_neighbor(self, dot: Dot):
         neighbors: List[Dot] = []
         for dx in range(-1, 2):
             for dy in range(-1, 2):
@@ -133,41 +160,9 @@ class Map:
                     continue
                 current_dot = Dot(dot.x + dx, dot.y + dy)
                 if 0 <= current_dot.x < self.size[0] \
-                        and 0 <= current_dot.y < self.size[1] \
-                        and self[current_dot] == color:
+                        and 0 <= current_dot.y < self.size[1]:
                     neighbors.append(current_dot)
         return neighbors
-
-    def find_inside_cycles_dots(self, cycle: [List[Dot]], color: Color):
-        inside_dots: List[Dot] = []
-        for x in range(len(self.dots)):
-            for y in range(len(self.dots[x])):
-                if self.is_dot_inside_polygon(Dot(x, y), cycle)\
-                        and self[Dot(x, y)] == color:
-                    inside_dots.append(Dot(x, y))
-        return inside_dots
-
-    def is_dot_inside_polygon(self, test_dot: Dot, polygon: List[Dot]):
-        polygon_set = set(polygon)
-        if test_dot in polygon_set:
-            return False
-        q1 = 0
-        q2 = 0
-        q3 = 0
-        q4 = 0
-        for dx in range(test_dot.x, self.size[0]):
-            if Dot(dx, test_dot.y) in polygon_set:
-                q1 += 1
-        for dx in range(0, test_dot.x):
-            if Dot(dx, test_dot.y) in polygon_set:
-                q2 += 1
-        for dy in range(test_dot.y, self.size[1]):
-            if Dot(test_dot.x, dy) in polygon_set:
-                q3 += 1
-        for dy in range(0, test_dot.y):
-            if Dot(test_dot.x, dy) in polygon_set:
-                q4 += 1
-        return q1 % 2 == 1 and q2 % 2 == 1 and q3 % 2 == 1 and q4 % 2 == 1
 
     @staticmethod
     def get_opponent_color(user_color: Color):
@@ -177,3 +172,25 @@ class Map:
         if user_color == Color.BLUE:
             opponent_color = Color.RED
         return opponent_color
+
+    def update_score(self):
+        self.score[Color.RED] = self.get_count(Color.BLUE, self.blue_blocked)
+        self.score[Color.BLUE] = self.get_count(Color.RED, self.red_blocked)
+
+    def get_count(self, color: Color, blocked):
+        count = 0
+        for i in blocked:
+            for j in i:
+                if self[j] == color:
+                    count += 1
+        return count
+
+    def fill_blocked(self):
+        self.blocked = set()
+        for i in self.blue_blocked:
+            for j in i:
+                self.blocked.add(j)
+        for i in self.red_blocked:
+            for j in i:
+                self.blocked.add(j)
+        pass

@@ -9,6 +9,7 @@ class Player:
         self.current_dot: Dot = Dot(0, 0)
         self.color: Color = color
         self.map_size: Tuple[int, int] = map_size
+        self.t = 0
 
     def move_left(self):
         self.current_dot.x -= 1
