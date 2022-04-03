@@ -35,6 +35,14 @@ class Game:
             self.player.move_up()
         if keys[pygame.K_DOWN]:
             self.player.move_down()
+        if keys[pygame.K_q]:
+            self.game_map.undo()
+        if keys[pygame.K_w]:
+            self.game_map.redo()
+        if keys[pygame.K_e]:
+            self.game_map.save()
+        if keys[pygame.K_r]:
+            self.game_map.load()
         if keys[pygame.K_SPACE]:
             self.player.try_set_dot_player(self.game_map)
         self.opponent.try_set_dot_opponent(self.game_map)

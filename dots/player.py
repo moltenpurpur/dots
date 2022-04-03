@@ -1,3 +1,5 @@
+from copy import copy
+
 from dots.dot import Dot
 from dots.map import Map
 from dots.color import Color
@@ -32,7 +34,7 @@ class Player:
             self.current_dot.y = 0
 
     def select_dot(self) -> Dot:
-        return self.current_dot
+        return copy(self.current_dot)
 
     def try_set_dot_player(self, game_map: Map):
         game_map.try_set_dot(self.select_dot(), self.color)

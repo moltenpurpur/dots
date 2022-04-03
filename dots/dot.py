@@ -1,3 +1,6 @@
+import json
+
+
 class Dot:
     def __init__(self, x, y):
         self.x = x
@@ -14,3 +17,6 @@ class Dot:
 
     def __repr__(self):
         return str(self)
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__)

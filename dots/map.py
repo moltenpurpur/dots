@@ -1,9 +1,11 @@
 import collections
-import copy
+import json
 
 from dots.dot import Dot
 from dots.color import Color
-from typing import *
+from typing import List, Tuple, Dict, Set
+from dots.save import Saver
+
 
 
 class Map:
@@ -19,6 +21,8 @@ class Map:
         self.red_blocked: List[Set[Dot]] = []
         self.score: Dict[Color, int] = collections.defaultdict(int)
         self.blocked: Set[Dot] = set()
+        self.dot_sequence: List[Tuple] = []
+        self.point = 0
 
     def __getitem__(self, item: Dot):
         return self.dots[item.x][item.y]
@@ -37,6 +41,17 @@ class Map:
             self.dots.append(dots_line)
         self.companents = [(Color.EMPTY, m)]
 
+    def drop_map(self):
+        self.cycle_way: Dict[Color, List[List[Dot]]] = \
+            collections.defaultdict(list)
+        self.blue_blocked: List[Set[Dot]] = []
+        self.red_blocked: List[Set[Dot]] = []
+        self.score: Dict[Color, int] = collections.defaultdict(int)
+        self.blocked: Set[Dot] = set()
+        for x in range(self.size[0]):
+            for y in range(self.size[1]):
+                self.dots[x][y] = Color.EMPTY
+
     def can_set_dot(self, dot: Dot):
         return 0 <= dot.x < len(self.dots) \
                and 0 <= dot.y < len(self.dots[dot.x]) \
@@ -45,13 +60,17 @@ class Map:
     def try_set_dot(self, target_dot: Dot, color: Color):
         if self.players[self.set_turn] == color \
                 and self.can_set_dot(target_dot):
-            self[target_dot] = color
-            self.set_turn += 1
-            if self.set_turn >= len(self.players):
-                self.set_turn = 0
-            self.find_cycles()
-            self.fill_blocked()
-            self.update_score()
+            self.writing_to_sequence(target_dot, color)
+            self.set_dot(target_dot, color)
+
+    def set_dot(self, target_dot, color):
+        self[target_dot] = color
+        self.set_turn += 1
+        if self.set_turn >= len(self.players):
+            self.set_turn = 0
+        self.find_cycles()
+        self.fill_blocked()
+        self.update_score()
 
     def find_cycles(self):
         dot_colors = collections.defaultdict(set)
@@ -66,9 +85,6 @@ class Map:
             self.blue_blocked.append(i)
         for i in self.get_blocked(Color.RED, dot_colors[Color.RED]):
             self.red_blocked.append(i)
-        # for i in self.get_blocked(Color.EMPTY, dot_colors[Color.EMPTY]):
-        #     for j in i:
-        #         self[j] = Color.BLOCKED
 
         blue_cycles: List[List[Dot]] = []
         red_cycles: List[List[Dot]] = []
@@ -194,3 +210,30 @@ class Map:
             for j in i:
                 self.blocked.add(j)
         pass
+
+    def writing_to_sequence(self, dot, color):
+        if len(self.dot_sequence) > self.point:
+            self.dot_sequence = self.dot_sequence[0: self.point]
+        self.dot_sequence.append((dot, color))
+        self.point += 1
+
+    def load_map(self, sequence):
+        self.drop_map()
+        for i in sequence:
+            self.set_dot(i[0], i[1])
+
+    def undo(self):
+        if self.point != 0:
+            self.point -= 2
+            self.load_map(self.dot_sequence[0:self.point])
+
+    def redo(self):
+        if self.point < len(self.dot_sequence):
+            self.point += 2
+            self.load_map(self.dot_sequence[0:self.point])
+
+    def save(self):
+        Saver.save(self.dot_sequence)
+
+    def load(self):
+        self.load_map(Saver.load())
