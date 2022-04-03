@@ -2,7 +2,7 @@
 *"\_\_main__"* - start  
 *"config.py"* - set size game window
 #
-###control buttons:
+#control buttons:
 * arrows - cursor control
 * space - put a dot
 * q/w - undo/redo
