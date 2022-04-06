@@ -20,6 +20,8 @@ class Game:
             pygame.time.delay(100)
             self.check_events()
             self.drawer.draw_scene(self.game_map, self.player)
+            if self.game_map.is_end:
+                break
 
     def check_events(self):
         for event in pygame.event.get():

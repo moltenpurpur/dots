@@ -7,7 +7,6 @@ from typing import List, Tuple, Dict, Set
 from dots.save import Saver
 
 
-
 class Map:
     def __init__(self, win_size):
         self.dots: List[List[Color]] = []
@@ -23,6 +22,7 @@ class Map:
         self.blocked: Set[Dot] = set()
         self.dot_sequence: List[Tuple] = []
         self.point = 0
+        self.is_end = False
 
     def __getitem__(self, item: Dot):
         return self.dots[item.x][item.y]
@@ -32,14 +32,11 @@ class Map:
             self.dots[key.x][key.y] = value
 
     def fill_map(self):
-        m = []
         for x in range(self.size[0]):
             dots_line = []
             for y in range(self.size[1]):
                 dots_line.append(Color.EMPTY)
-                m.append(Dot(x, y))
             self.dots.append(dots_line)
-        self.companents = [(Color.EMPTY, m)]
 
     def drop_map(self):
         self.cycle_way: Dict[Color, List[List[Dot]]] = \
@@ -71,6 +68,7 @@ class Map:
         self.find_cycles()
         self.fill_blocked()
         self.update_score()
+        self.update_is_game_end()
 
     def find_cycles(self):
         dot_colors = collections.defaultdict(set)
@@ -237,3 +235,10 @@ class Map:
 
     def load(self):
         self.load_map(Saver.load())
+
+    def update_is_game_end(self):
+        for x in self.dots:
+            for y in x:
+                if y is Color.EMPTY:
+                    return
+        self.is_end = True
