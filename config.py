@@ -1,2 +1,1 @@
-win_size = (10, 10)
-
+win_size = (5, 5)

@@ -28,21 +28,21 @@ class Drawer:
         pygame.display.update()
 
     def draw_lines(self):
-        end_y = (self.window_size[0] + 1) * self.step
+        end_y = (self.window_size[0]) * self.step
         end_x = (self.window_size[1]) * self.step
 
-        for y in range(self.step, end_y, self.step):
+        for y in range(self.step, end_y + self.step, self.step):
             pygame.draw.line(self.win,
                              (0, 0, 0),
                              (self.step, y),
-                             (end_y - self.step, y),
+                             (end_x, y),
                              1)
 
         for x in range(self.step, end_x + self.step, self.step):
             pygame.draw.line(self.win,
                              (0, 0, 0),
                              (x, self.step),
-                             (x, end_x),
+                             (x, end_y),
                              1)
 
     def draw_dots(self, game_map: List[List[Color]]):
@@ -76,7 +76,10 @@ class Drawer:
                                       (cycle[i].y + 1) * self.step), 3)
 
     def draw_score(self, game_map: Dict[Color, int]):
-        font = pygame.font.Font(None, 36)
+        win_size = (self.window_size[0] + 1) * self.step + (
+                self.window_size[1] + 2) * self.step + 50
+        font_size = max(int(36 / 1200 * win_size), 21)
+        font = pygame.font.Font(None, font_size)
         t = 1
         for color in game_map:
             text = font.render('Score: \n' + str(color) + '\n' +

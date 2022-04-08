@@ -1,6 +1,7 @@
 import pygame
 import sys
 from dots.drawer import Drawer
+from dots.end_menu import EndMenu
 from dots.map import Map
 from dots.opponent import Opponent
 from dots.player import Player
@@ -12,16 +13,20 @@ class Game:
     def __init__(self, win_size):
         self.game_map = Map(win_size)
         self.drawer = Drawer(win_size)
+        self.end_menu = EndMenu(self.drawer.win, win_size)
         self.player = Player(Color.RED, win_size)
         self.opponent = Opponent(Color.BLUE, win_size)
 
     def start(self):
         while True:
             pygame.time.delay(100)
+
+            if self.game_map.is_end:
+                self.end_menu.start_end_menu(self.game_map.score[Color.RED])
+                break
             self.check_events()
             self.drawer.draw_scene(self.game_map, self.player)
-            if self.game_map.is_end:
-                break
+
 
     def check_events(self):
         for event in pygame.event.get():
