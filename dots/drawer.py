@@ -28,8 +28,8 @@ class Drawer:
         pygame.display.update()
 
     def draw_lines(self):
-        end_y = (self.window_size[0]) * self.step
-        end_x = (self.window_size[1]) * self.step
+        end_y = (self.window_size[1]) * self.step
+        end_x = (self.window_size[0]) * self.step
 
         for y in range(self.step, end_y + self.step, self.step):
             pygame.draw.line(self.win,
