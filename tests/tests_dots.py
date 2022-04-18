@@ -161,6 +161,3 @@ class TestMap(unittest.TestCase):
         self.assertEqual(self.test_map.dot_sequence,
                          [(Dot(1, 2), Color.RED), (Dot(1, 1), Color.BLUE)])
 
-
-if __name__ == '__main__':
-    unittest.main()
